@@ -27,15 +27,15 @@ describe('#FileHelper test suite', () => {
                 birthtime: '2025-02-25T20:29:33.261Z'
             }
 
-            const expectedOwner = 'wesleycarvalho';
-            process.env.USER = expectedOwner;
+            const mockUser = 'wesleycarvalho';
+            process.env.USER = mockUser;
             const filename = 'fatNiko.jpg'
 
-            // jest.spyOn(fs.promises, fs.promises.stat.name)
-            //     .mockRejectedValue(statMock);
+            jest.spyOn(fs.promises, fs.promises.stat.name)
+                .mockResolvedValue(statMock);
 
-            // jest.spyOn(fs.promises, fs.promises.readdir.name)
-            //     .mockRejectedValue([filename]);
+            jest.spyOn(fs.promises, fs.promises.readdir.name)
+                .mockResolvedValue([filename]);
 
             // It will never reach /tmp folder, because we are mocking fs.stat
             // The wrong path is passed in proposital way.
@@ -43,15 +43,15 @@ describe('#FileHelper test suite', () => {
 
             const expectedResult = [
                 {
-                    size: '10 kb',
-                    birthtime: statMock.birthtime,
-                    owner: expectedOwner,
+                    size: '10.4 kB',
+                    lastModified: statMock.birthtime,
+                    owner: mockUser,
                     file: filename
                 }
             ];
 
             expect(fs.promises.stat).toHaveBeenCalledWith(`/tmp/${filename}`);
-            expect(result).toMatch(expectedResult);
+            expect(result).toMatchObject(expectedResult);
         });
     });
 });

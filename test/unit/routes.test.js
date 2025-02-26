@@ -2,6 +2,22 @@ import { describe, test, expect, jest } from '@jest/globals';
 import Routes from '../../src/routes.js';
 
 describe('#Routes test suite', () => {
+    const defaultParams = {
+        request: {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            method: '',
+            body: {}
+        },
+        response: {
+            setHeader: jest.fn(),
+            writeHead: jest.fn(),
+            end: jest.fn()
+        },
+        values: () => Object.values(defaultParams)
+    }
+
     describe('#setSocketInstance', () => {
         test('setSocket should store io instance', () => {
             const routes = new Routes();
@@ -16,22 +32,6 @@ describe('#Routes test suite', () => {
     });
 
     describe('#handler', () => {
-        const defaultParams = {
-            request: {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                },
-                method: '',
-                body: {}
-            },
-            response: {
-                setHeader: jest.fn(),
-                writeHead: jest.fn(),
-                end: jest.fn()
-            },
-            values: () => Object.values(defaultParams)
-        }
-
         test('given an inexistent route, it should choose default route', async () => {
             const routes = new Routes();
             const params = {
@@ -93,15 +93,30 @@ describe('#Routes test suite', () => {
     });
 
     describe('#get', () => {
-        test.skip('given method GET it should list all files downloaded', () => {
+        test('given method GET it should list all files downloaded', async () => {
+            const routes = new Routes();
+
+            const params = {
+                ...defaultParams
+            };
+
             const fileStatusesMock = [
                 {
-                    size: 10414,
-                    birthtime: '2025-02-25T20:29:33.261Z',
+                    size: '10.4 kB',
+                    lastModified: '2025-02-25T20:29:33.261Z',
                     owner: 'wesleycarvalho',
-                    file: 'fat-niko.png'
+                    file: 'filename.txt'
                 }
             ];
+
+            jest.spyOn(routes.fileHelper, routes.fileHelper.getFilesStatus.name)
+                .mockResolvedValue(fileStatusesMock);
+
+            params.request.method = 'GET';
+            await routes.handler(...params.values());
+
+            expect(params.response.writeHead).toHaveBeenCalledWith(200);
+            expect(params.response.end).toHaveBeenCalledWith(JSON.stringify(fileStatusesMock));
         });
     });
 });
